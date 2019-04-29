@@ -9,6 +9,8 @@ using namespace std;
 sf::Texture t, food, head;
 sf::SoundBuffer getFoodSound;
 sf::Sound foodSound;
+sf::SoundBuffer WhatTheFuckIsThisFlashOoooo;
+sf::Sound Dead;
 
 bool eatFood = false;
 int windowMaxX = 600;
@@ -71,6 +73,7 @@ void moveSnake(int& snakeSize, vector<Sprite> &s, vector<posXY> &body, int valX,
 	}
 	for (int i = 1; i < snakeSize; i++) {
 		if (body[0].posX == body[i].posX && body[0].posY == body[i].posY) {
+			Dead.play();
 			restart = true;
 		}
 	}
@@ -102,6 +105,8 @@ int main() {
 		//if (!getFoodSound.loadFromFile("getFood.ogg")) cout << "loadFailed" << endl;
 		if (!getFoodSound.loadFromFile("A.ogg")) cout << "loadFailed" << endl;
 		foodSound.setBuffer(getFoodSound);
+		if (!WhatTheFuckIsThisFlashOoooo.loadFromFile("OOOOO.ogg")) cout << "loadFailed" << endl;
+		Dead.setBuffer(WhatTheFuckIsThisFlashOoooo);
 
 		while (window.isOpen()) {
 			Event e;
@@ -145,7 +150,10 @@ int main() {
 			drawFood(window, sweetFood, foodS);
 			drawSnake(window, s);
 			sf::sleep(sf::milliseconds(50));
-			if (restart) break;
+			if (restart) {
+				sf::sleep(sf::milliseconds(4000));
+				break;
+			}
 		}
 	//}
 	
