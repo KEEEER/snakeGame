@@ -2,11 +2,11 @@
 #include <random>
 #include <vector>
 #include <SFML\Graphics.hpp>
-#include <SFML/Audio.hpp>
+#include <SFML\Audio.hpp>
 using namespace sf;
 using namespace std;
 
-sf::Texture t, food, head;
+sf::Texture t, food, head, t_purple;
 sf::SoundBuffer getFoodSound;
 sf::Sound foodSound;
 sf::SoundBuffer WhatTheFuckIsThisFlashOoooo;
@@ -17,7 +17,9 @@ int windowMaxX = 600;
 int windowMaxY = 600;
 int stepX = 30;
 int stepY = 30;
+int soundStep = 10;
 bool restart = false;
+bool jumped = false;
 
 struct posXY {
 	int posX;
@@ -42,14 +44,14 @@ void drawSnake(RenderWindow &window, vector<Sprite> &s) {
 	s[0].setTexture(head);
 	window.draw(s[0]);
 	for (int i = 1; i < s.size(); i++) {
-		cout << "drawing " << i << "   " << s[i].getPosition().x << " :: " << s[i].getPosition().y << endl;
-		s[i].setTexture(t);
+		
 		window.draw(s[i]);
 	}
 	window.display();
 }
 void moveSnake(int& snakeSize, vector<Sprite> &s, vector<posXY> &body, int valX, int valY, string clickStr) {
 	for (int i = snakeSize-1; i > 0 ; i--) {
+		s[i].setTexture(t);
 		s[i].setPosition(sf::Vector2f(body[i - 1].posX, body[i - 1].posY));
 		body[i].posX = body[i - 1].posX;
 		body[i].posY = body[i - 1].posY;
@@ -62,7 +64,7 @@ void moveSnake(int& snakeSize, vector<Sprite> &s, vector<posXY> &body, int valX,
 	s[0].setPosition(sf::Vector2f(body[0].posX + valX, body[0].posY + valY));
 	body[0].posX += valX;
 	body[0].posY += valY;
-	if (body[0].posX == sweetFood.posX && body[0].posY == sweetFood.posY) {
+	if (body[0].posX == sweetFood.posX && body[0].posY == sweetFood.posY && !jumped) {
 		Sprite temp;
 		body.push_back(posXY(body[s.size() - 1].posX - valX, body[s.size() - 1].posY - valY));
 		s.push_back(temp);	
@@ -72,9 +74,14 @@ void moveSnake(int& snakeSize, vector<Sprite> &s, vector<posXY> &body, int valX,
 		foodSound.play();
 	}
 	for (int i = 1; i < snakeSize; i++) {
-		if (body[0].posX == body[i].posX && body[0].posY == body[i].posY) {
-			Dead.play();
-			restart = true;
+		if (body[0].posX == body[i].posX && body[0].posY == body[i].posY ) {
+			if (jumped) {
+				s[i].setTexture(t_purple);
+			}
+			else {
+				Dead.play();
+				restart = true;
+			}
 		}
 	}
 }
@@ -89,7 +96,7 @@ int main() {
 
 		int snakeSize = 1;
 
-		RenderWindow window(VideoMode(windowMaxX, windowMaxY), "snake!");
+		RenderWindow window(VideoMode(windowMaxX, windowMaxY), "why that ice bird comes again?");
 		vector<Sprite> s(snakeSize);
 		Sprite foodS;
 
@@ -99,21 +106,38 @@ int main() {
 
 		string preEvent = "Queen";
 	
-		t.loadFromFile("square_small.png");
-		food.loadFromFile("icebird_small.png");
-		head.loadFromFile("character_small.png");
-		//if (!getFoodSound.loadFromFile("getFood.ogg")) cout << "loadFailed" << endl;
-		if (!getFoodSound.loadFromFile("A.ogg")) cout << "loadFailed" << endl;
+		t.loadFromFile("./graphics/square_small.png");
+		food.loadFromFile("./graphics/icebird_small.png");
+		head.loadFromFile("./graphics/character_small.png");
+		t_purple.loadFromFile("./graphics/baby_small.jpg");
+
+		if (!getFoodSound.loadFromFile("./sounds/A.ogg")) cout << "loadFailed" << endl;
 		foodSound.setBuffer(getFoodSound);
-		if (!WhatTheFuckIsThisFlashOoooo.loadFromFile("OOOOO.ogg")) cout << "loadFailed" << endl;
+		foodSound.setVolume(50);
+		if (!WhatTheFuckIsThisFlashOoooo.loadFromFile("./sounds/OOOOO.ogg")) cout << "loadFailed" << endl;
 		Dead.setBuffer(WhatTheFuckIsThisFlashOoooo);
+		Dead.setVolume(35);
 
 		while (window.isOpen()) {
 			Event e;
-			cout << snakeSize << endl;
 			while (window.pollEvent(e)) {
+				jumped = false;
 				if (e.type == Event::Closed) {
 					window.close();
+				}
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+					cout << "A pressed" << endl;
+					jumped = true;
+				}
+				if (sf::Mouse::isButtonPressed(sf::Mouse::Left)){
+					foodSound.setVolume(foodSound.getVolume() + soundStep);
+					Dead.setVolume(Dead.getVolume() + soundStep);
+					cout << foodSound.getVolume();
+				}
+				else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)){
+					foodSound.setVolume(foodSound.getVolume() - soundStep);
+					Dead.setVolume(Dead.getVolume() - soundStep);
+					cout << foodSound.getVolume();
 				}
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && preEvent != "R") {
 					if (preEvent == "L") continue;
@@ -149,9 +173,9 @@ int main() {
 			window.clear(Color::White);
 			drawFood(window, sweetFood, foodS);
 			drawSnake(window, s);
-			sf::sleep(sf::milliseconds(50));
+			sf::sleep(sf::milliseconds(75));
 			if (restart) {
-				sf::sleep(sf::milliseconds(4000));
+				sf::sleep(sf::milliseconds(3600));
 				break;
 			}
 		}
